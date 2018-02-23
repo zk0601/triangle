@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import pdb
+import time
 # import exchangeConnection.bitex.bitexService
 # import exchangeConnection.pro.proService
 import utils.helper as uh
@@ -24,7 +25,7 @@ okcoinFuture = OKCoinFuture(okcoinRESTURL,apikey,secretkey)
 class Market:
     def __init__(self, market_name="okex"):
         self.market_name = market_name
-        self.curs = ['insur', 'eth', 'usdt']
+        self.curs = ['insur', 'eth', 'usdt', 'btc']
 
     def market_detail(self, base_cur, quote_cur):
         """
@@ -208,26 +209,36 @@ if __name__ == "__main__":
     print(okex.market_detail("eth", "usdt"))
     print(okex.market_detail("insur", "usdt"))
     print(okex.market_detail("insur", "eth"))
-    print(okex.account_available('insur'))
-    print(okex.account_available('eth'))
-    print(okex.account_available('usdt'))
-    print(okex.account_available('btc'))
-    r1 = okex.buy('insur_usdt', '0.0029','20')
-    r2 = okex.sell('insur_usdt', '0.0029','20')
-    print(r1)
-    print(r2)
-    r3 = okex.buy_market('insur_usdt','20')
-    r4 = okex.sell_market('insur_usdt','20')
-    print(r3)
-    print(r4)
-    r5 = okex.order_normal(r1,'insur_usdt')
-    r6 = okex.get_order_processed_amount(r1,'insur_usdt')
-    r7 = okex.cancel_order(r1,'insur_usdt')
-    r8 = okex.get_order_status(r1,'insur_usdt')
-    print(r5)
-    print(r6)
-    print(r7)
-    print(r8)
+    # print(okex.account_available('insur'))
+    # print(okex.account_available('eth'))
+    # print(okex.account_available('usdt'))
+    # print(okex.account_available('btc'))
+    # r1 = okex.buy('insur_usdt', '0.0029','20')
+    # r2 = okex.sell('insur_usdt', '0.0029','20')
+    # print(r1)
+    # print(r2)
+    # r3 = okex.buy_market('insur_usdt','20')
+    # r4 = okex.sell_market('insur_usdt','20')
+    # print(r3)
+    # print(r4)
+    # r5 = okex.order_normal(r1,'insur_usdt')
+    # r6 = okex.get_order_processed_amount(r1,'insur_usdt')
+    # r7 = okex.cancel_order(r1,'insur_usdt')
+    # r8 = okex.get_order_status(r1,'insur_usdt')
+    # print(r5)
+    # print(r6)
+    # print(r7)
+    # print(r8)
+    while True:
+        # insur_eth
+        # insur_usdt
+        # eth_usdt
+        print("*"*40)
+        print("insur_eth | sell: {0} | buy: {1}".format(okex.market_detail("insur", "eth")['sell'], okex.market_detail("insur", "btc")['buy']))
+        print("insur_usdt | sell: {0} | buy: {1}".format(okex.market_detail("insur", "usdt")['sell'], okex.market_detail("insur", "usdt")['buy']))
+        print("eth_usdt | sell: {0} | buy: {1}".format(okex.market_detail("eth", "usdt")['sell'], okex.market_detail("btc", "usdt")['buy']))
+        time.sleep(2)
+        pass
     pdb.set_trace()
 
 # print(exchangeConnection.pro.proService.ProServiceAPIKey().get_depth("ethcny").get("tick"))

@@ -33,7 +33,7 @@ class Triangle:
         可以获得多少单位的quote currency（比如BTC）。
         当LTC对BTC的价格上涨时，同等单位的LTC能够兑换的BTC是增加的，而同等单位的BTC能够兑换的LTC是减少的。
     """
-    def __init__(self, base_cur="insur", quote_cur="eth", mid_cur="usdt", interval=3):
+    def __init__(self, base_cur="insur", quote_cur="eth", mid_cur="usdt", interval=5):
         """
         初始化
         :param base_cur:  基准资产
@@ -83,6 +83,8 @@ class Triangle:
             self.market_price_tick = dict()
             # base_cur="usdt", quote_cur="eth", mid_cur="insur"
             # usdt_eth
+            print('*'*40)
+            print("{0}_{1}".format(self.base_cur, self.quote_cur))
             self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)] = \
                 okex_market.market_detail(self.base_cur, self.quote_cur)
             market_price_sell_1 = \
@@ -90,6 +92,7 @@ class Triangle:
             market_price_buy_1 = \
                 float(self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("buy"))
             # usdt_insur
+            print("{0}_{1}".format(self.base_cur, self.mid_cur))
             self.market_price_tick["{0}_{1}".format(self.base_cur, self.mid_cur)] = \
                 okex_market.market_detail(self.base_cur, self.mid_cur)
             base_mid_price_buy_1 = \
@@ -97,6 +100,7 @@ class Triangle:
             base_mid_price_sell_1 = \
                 float(self.market_price_tick["{0}_{1}".format(self.base_cur, self.mid_cur)].get("sell"))
             # eth_insur
+            print("{0}_{1}".format(self.quote_cur, self.mid_cur))
             self.market_price_tick["{0}_{1}".format(self.quote_cur, self.mid_cur)] = \
                 okex_market.market_detail(self.quote_cur, self.mid_cur)
             quote_mid_price_sell_1 = \
@@ -208,6 +212,7 @@ class Triangle:
     计算买入下单数量:
     目前为随机 100-500个 insur 之间
     '''
+    # TODO: 根据交易历史和账户余额确定下单数量
     def get_market_buy_size(self, okex_market):
         '''
         Parameter Info
@@ -221,20 +226,14 @@ class Triangle:
 
         base_mid_sell_size = 20 # insur amount
 
-        base_quote_off_reserve_buy_size = \
-            (okex_market.account_available(self.quote_cur)
-             - self.base_quote_quote_reserve) / \
-            self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("asks")[0][0]
+        base_quote_off_reserve_buy_size = okex_market.account_available(self.quote_cur) - self.base_quote_quote_reserve # / \
+            # self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("asks")[0][0]
 
-        quote_mid_off_reserve_buy_size = \
-            (okex_market.account_available(self.mid_cur) -
-             self.quote_mid_mid_reserve) / \
-            self.market_price_tick["{0}_{1}".format(self.quote_cur, self.mid_cur)].get("asks")[0][0] / \
-            self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("asks")[0][0]
+        quote_mid_off_reserve_buy_size = okex_market.account_available(self.mid_cur) - self.quote_mid_mid_reserve #/ \
+            # self.market_price_tick["{0}_{1}".format(self.quote_cur, self.mid_cur)].get("asks")[0][0] / \
+            # self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("asks")[0][0]
 
-        base_mid_off_reserve_sell_size = \
-            okex_market.account_available(self.base_cur) - \
-            self.base_mid_base_reserve
+        base_mid_off_reserve_sell_size = okex_market.account_available(self.base_cur) - self.base_mid_base_reserve
         logger.info("计算数量：{0}，{1}，{2}，{3}，{4}".format(market_buy_size, base_mid_sell_size,
                                                       base_quote_off_reserve_buy_size, quote_mid_off_reserve_buy_size,
                                                       base_mid_off_reserve_sell_size))
@@ -266,17 +265,11 @@ class Triangle:
     def get_market_sell_size(self, okex_market):
         market_sell_size = 20 # 应当为 (总数额的 usdt - 预留 usdt) * 风险系数
         base_mid_buy_size = 20 # insur amount
-        base_quote_off_reserve_sell_size = \
-            okex_market.account_available(self.base_cur) \
-            - self.base_quote_base_reserve
-        quote_mid_off_reserve_sell_size = \
-            (okex_market.account_available(self.quote_cur) -
-             self.quote_mid_quote_reserve) / \
-            self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("bids")[0][0]
-        base_mid_off_reserve_buy_size = \
-            (okex_market.account_available(self.mid_cur) -
-             self.base_mid_mid_reserve) / \
-            self.market_price_tick["{0}_{1}".format(self.base_cur, self.mid_cur)].get("asks")[0][0]
+        base_quote_off_reserve_sell_size = okex_market.account_available(self.base_cur) - self.base_quote_base_reserve
+        quote_mid_off_reserve_sell_size = okex_market.account_available(self.quote_cur) - self.quote_mid_quote_reserve #/ \
+            # self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("bids")[0][0]
+        base_mid_off_reserve_buy_size = okex_market.account_available(self.mid_cur) - self.base_mid_mid_reserve #/ \
+            # self.market_price_tick["{0}_{/1}".format(self.base_cur, self.mid_cur)].get("asks")[0][0]
         logger.info("计算数量：{0}，{1}，{2}，{3}，{4}".format(market_sell_size, base_mid_buy_size,
                     base_quote_off_reserve_sell_size, quote_mid_off_reserve_sell_size, base_mid_off_reserve_buy_size))
         return math.floor(min(market_sell_size, base_mid_buy_size, base_quote_off_reserve_sell_size,
