@@ -206,9 +206,9 @@ class Market:
 # test
 if __name__ == "__main__":
     okex = Market()
-    print(okex.market_detail("eth", "usdt"))
-    print(okex.market_detail("insur", "usdt"))
-    print(okex.market_detail("insur", "eth"))
+    # print(okex.market_detail("eth", "usdt"))
+    # print(okex.market_detail("insur", "usdt"))
+    # print(okex.market_detail("insur", "eth"))
     # print(okex.account_available('insur'))
     # print(okex.account_available('eth'))
     # print(okex.account_available('usdt'))
@@ -229,15 +229,28 @@ if __name__ == "__main__":
     # print(r6)
     # print(r7)
     # print(r8)
+    # base_cur, mid_cur, quote_cur = 'insur', 'usdt', 'eth'
+    base_cur, mid_cur, quote_cur = 'insur', 'usdt', 'eth'
+    # mid_cur = 'usdt'
+    # quote_cur = 'eth'
     while True:
         # insur_eth
         # insur_usdt
         # eth_usdt
-        print("*"*40)
-        print("insur_eth | sell: {0} | buy: {1}".format(okex.market_detail("insur", "eth")['sell'], okex.market_detail("insur", "btc")['buy']))
-        print("insur_usdt | sell: {0} | buy: {1}".format(okex.market_detail("insur", "usdt")['sell'], okex.market_detail("insur", "usdt")['buy']))
-        print("eth_usdt | sell: {0} | buy: {1}".format(okex.market_detail("eth", "usdt")['sell'], okex.market_detail("btc", "usdt")['buy']))
-        time.sleep(2)
+        base_quote = okex.market_detail(base_cur, quote_cur)
+        base_mid = okex.market_detail(base_cur, mid_cur)
+        quote_mid = okex.market_detail(quote_cur, mid_cur)
+        print("*"*50)
+        print("base_quote => {} | sell: {} | buy: {}".format(base_cur+'/'+quote_cur, base_quote['sell'], base_quote['buy']))
+        print("base_mid => {} | sell: {} | buy: {}".format(base_cur+'/'+mid_cur, base_mid['sell'], base_mid['buy']))
+        print("quote_mid => {} | sell: {} | buy: {}".format(quote_cur+'/'+mid_cur, quote_mid['sell'], quote_mid['buy']))
+        # 计算正循环套利
+        print("="*50)
+        print("positive cycle: {}".format(( float(base_mid['buy']) /float(quote_mid['sell']) - float(base_quote['sell']))/float(base_quote['sell'])))
+        print("negative cycle: {}".format((float(base_quote['buy']) - float(base_mid['sell'])/float(quote_mid['buy']) )/float(base_quote['sell'])))
+        # base_mid_price_buy_1 / quote_mid_price_sell_1 - market_price_sell_1)/market_price_sell_1
+        # market_price_buy_1 - base_mid_price_sell_1 / quote_mid_price_buy_1)/market_price_buy_1
+        time.sleep(0.5)
         pass
     pdb.set_trace()
 
