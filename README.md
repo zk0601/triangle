@@ -6,3 +6,10 @@
 
 2.使用说明：运行环境推荐：python3.6,安装requests包。首先accountConfig.py配置好access_key以及secret_key。然后在Triangle的__init__的方法里设定货币对（现在支持eth或者ltc或者etc作为base currency, btc作为quote currency, cny作为中间currency，进行三角套利），设定滑点和手续费，账户货币的保留数量，监控时间间隔（单位为秒），最小交易单位。 然后运行triangle_main.py
 
+请创建一个 config.py 文件用作配置账户信息.
+内容如下:
+
+    #初始化apikey，secretkey,url
+    apikey = 'apikey'
+    secretkey = 'secretkey'
+    okcoinRESTURL = 'www.okex.com'   #请求注意：国内账号需要 修改为 www.okcoin.cn  
