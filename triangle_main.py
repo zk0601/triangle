@@ -87,6 +87,7 @@ class Triangle:
             print("{0}_{1}".format(self.base_cur, self.quote_cur))
             self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)] = \
                 okex_market.market_detail(self.base_cur, self.quote_cur)
+
             market_price_sell_1 = \
                 float(self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("sell"))
             market_price_buy_1 = \

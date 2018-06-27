@@ -162,7 +162,7 @@ class Market:
         if self.market_name == "okex":
             base_cur, quote_cur = cur_market_name.split("_")
             try:
-                if order_result['result'] ==True:
+                if order_result['result'] == True:
                     order_id = order_result['order_id']
                     order_info = okcoinSpot.orderinfo(cur_market_name,str(order_id))
                     if type(order_info) ==str:
@@ -192,6 +192,7 @@ class Market:
         if self.market_name == "okex":
             base_cur, quote_cur = cur_market_name.split("_")
             try:
+                order_id = order_result.get("order_id")
                 order_info = okcoinSpot.orderinfo(cur_market_name,str(order_id))
                 if type(order_info) ==str:
                     order_info = json.loads(order_info)
