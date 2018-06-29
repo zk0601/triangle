@@ -78,6 +78,7 @@ class Triangle:
         # 检查是否有套利空间
         try:
             # M: okex market
+            logger.info("开始执行一次策略")
             okex_market = marketHelper.Market()
             # base_cur="usdt", quote_cur="eth", mid_cur="insur"
             print('*'*40)
@@ -88,9 +89,10 @@ class Triangle:
             market_sell_size = downRound(market_sell_size, 2)
 
             #盘口信息，调用ticker接口，获取sell值和buy值，即实时更新市场行情
+            print("开始获取市场行情")
+            logger.info("开始获取市场行情")
             self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)] = \
                 okex_market.market_detail(self.base_cur, self.quote_cur)
-
             market_price_sell_1 = \
                 float(self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("sell"))
             market_price_buy_1 = \
@@ -112,7 +114,8 @@ class Triangle:
             quote_mid_price_buy_1 = \
                 float(self.market_price_tick["{0}_{1}".format(self.quote_cur, self.mid_cur)].get("buy"))
             # pdb.set_trace()
-            logger.info("开始检查")
+            logger.info("开始检查是否有套利空间")
+            print("开始检查是否有套利空间")
             # 检查正循环套利
             '''
                 三角套利的基本思路是，用两个市场（比如BTC/CNY，LTC/CNY）的价格（分别记为P1，P2），
@@ -132,7 +135,15 @@ class Triangle:
                 (base_mid_price_buy_1 / quote_mid_price_sell_1 - market_price_sell_1)/market_price_sell_1,
                 self.sum_slippage_fee())
                   )
+            print("正循环差价：{0},滑点+手续费:{1}".format(
+                (base_mid_price_buy_1 / quote_mid_price_sell_1 - market_price_sell_1)/market_price_sell_1,
+                self.sum_slippage_fee())
+                  )
             logger.info("逆循环差价：{0},滑点+手续费:{1}".format(
+                  (market_price_buy_1 - base_mid_price_sell_1 / quote_mid_price_buy_1)/market_price_buy_1,
+                   self.sum_slippage_fee())
+                  )
+            print("逆循环差价：{0},滑点+手续费:{1}".format(
                   (market_price_buy_1 - base_mid_price_sell_1 / quote_mid_price_buy_1)/market_price_buy_1,
                    self.sum_slippage_fee())
                   )
@@ -228,6 +239,7 @@ class Triangle:
 
         base_mid_sell_size = 20 # insur amount
 
+        print('获取账号余额开始')
         base_quote_off_reserve_buy_size = okex_market.account_available(self.quote_cur) - self.base_quote_quote_reserve # / \
             # self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("asks")[0][0]
 
@@ -240,6 +252,7 @@ class Triangle:
                                                       base_quote_off_reserve_buy_size, quote_mid_off_reserve_buy_size,
                                                       base_mid_off_reserve_sell_size))
 
+        print('获取账号余额结束')
         return math.floor(min(market_buy_size, base_mid_sell_size, base_quote_off_reserve_buy_size,
                               quote_mid_off_reserve_buy_size, base_mid_off_reserve_sell_size)*10000)/10000
 
@@ -315,7 +328,7 @@ class Triangle:
             field_amount = float(okex_market.get_order_processed_amount(
                 order_result, cur_market_name=self.get_market_name(self.base_cur, self.quote_cur)))
 
-            logger.info("field_amount:{0}{1}".format(field_amount,already_hedged_amount))
+            logger.info("全部交易数量:{0} 已经完成交易数量：{1}".format(field_amount,already_hedged_amount))
 
             if field_amount-already_hedged_amount < self.min_trade_unit:
                 logger.info("没有新的成功交易或者新成交数量太少")
@@ -323,7 +336,7 @@ class Triangle:
                 continue
 
             # 开始对冲
-            logger.info("开始对冲，数量：{0}".format(field_amount - already_hedged_amount))
+            logger.info("开始对冲，本次交易数量：{0}".format(field_amount - already_hedged_amount))
 
             p1 = multiprocessing.Process(target=self.hedged_sell_cur_pair,
                                          args=(field_amount-already_hedged_amount,okex_market,
@@ -384,7 +397,7 @@ class Triangle:
 
             field_amount = float(okex_market.get_order_processed_amount(
                     order_result, cur_market_name=self.get_market_name(self.base_cur, self.quote_cur)))
-            logger.info("field_amount:{0}{1}".format(field_amount, already_hedged_amount))
+            logger.info("全部交易数量:{0} 已经完成交易数量：{1}".format(field_amount, already_hedged_amount))
 
             if field_amount - already_hedged_amount < self.min_trade_unit:
                 logger.info("没有新的成功交易或者新成交数量太少")
@@ -392,7 +405,7 @@ class Triangle:
                 continue
 
             # 开始对冲
-            logger.info("开始对冲，数量：{0}".format(field_amount - already_hedged_amount))
+            logger.info("开始对冲，本次交易数量：{0}".format(field_amount - already_hedged_amount))
             p1 = multiprocessing.Process(target=self.hedged_buy_cur_pair,
                                          args=(field_amount - already_hedged_amount, okex_market,
                                                self.get_market_name(self.base_cur, self.mid_cur)))
