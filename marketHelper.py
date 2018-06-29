@@ -3,14 +3,24 @@
 
 import pdb
 import time
+import os
 # import exchangeConnection.bitex.bitexService
 # import exchangeConnection.pro.proService
-import utils.helper as uh
+# import utils.helper as uh
 import json
 #############
 from OkcoinSpotAPI import OKCoinSpot
 from OkcoinFutureAPI import OKCoinFuture
-from config import *
+# from config import *
+import yaml
+File_path = os.path.abspath(__file__)
+user_info_yaml_path = os.path.join(File_path, '..', 'user_info.yaml')
+
+with open(user_info_yaml_path) as f:
+    user_info = yaml.load(f)
+okcoinRESTURL = user_info['user_1']['url'][0]
+apikey = user_info['user_1']['apikey'][0]
+secretkey = user_info['user_1']['secretkey'][0]
 
 #现货API
 okcoinSpot = OKCoinSpot(okcoinRESTURL,apikey,secretkey)
@@ -108,7 +118,7 @@ class Market:
         if self.market_name == "okex":
             base_cur, quote_cur = cur_market_name.split("_")
             try:
-                order_result = okcoinSpot.trade(cur_market_name,'buy_market', str(amount))
+                order_result = okcoinSpot.trade(cur_market_name,'buy_market', str(amount), '')
                 if type(order_result) == str:
                     order_result = json.loads(order_result)
                 return order_result
@@ -127,7 +137,7 @@ class Market:
         if self.market_name == "okex":
             base_cur, quote_cur = cur_market_name.split("_")
             try:
-                order_result = okcoinSpot.trade(cur_market_name,'sell_market', str(amount))
+                order_result = okcoinSpot.trade(cur_market_name,'sell_market', '',str(amount))
                 if type(order_result) == str:
                     order_result = json.loads(order_result)
                 return order_result
@@ -224,36 +234,35 @@ if __name__ == "__main__":
     # print(r4)
     # r5 = okex.order_normal(r1,'insur_usdt')
     # r6 = okex.get_order_processed_amount(r1,'insur_usdt')
+    # rx = okex.get_order_status(r1,'insur_usdt')
     # r7 = okex.cancel_order(r1,'insur_usdt')
     # r8 = okex.get_order_status(r1,'insur_usdt')
     # print(r5)
     # print(r6)
+    # print(rx)
     # print(r7)
     # print(r8)
     # base_cur, mid_cur, quote_cur = 'insur', 'usdt', 'eth'
-    base_cur, mid_cur, quote_cur = 'insur', 'usdt', 'eth'
-    # mid_cur = 'usdt'
-    # quote_cur = 'eth'
-    while True:
-        # insur_eth
-        # insur_usdt
-        # eth_usdt
-        base_quote = okex.market_detail(base_cur, quote_cur)
-        base_mid = okex.market_detail(base_cur, mid_cur)
-        quote_mid = okex.market_detail(quote_cur, mid_cur)
-        print("*"*50)
-        print("base_quote => {} | sell: {} | buy: {}".format(base_cur+'/'+quote_cur, base_quote['sell'], base_quote['buy']))
-        print("base_mid => {} | sell: {} | buy: {}".format(base_cur+'/'+mid_cur, base_mid['sell'], base_mid['buy']))
-        print("quote_mid => {} | sell: {} | buy: {}".format(quote_cur+'/'+mid_cur, quote_mid['sell'], quote_mid['buy']))
-        # 计算正循环套利
-        print("="*50)
-        print("positive cycle: {}".format(( float(base_mid['buy']) /float(quote_mid['sell']) - float(base_quote['sell']))/float(base_quote['sell'])))
-        print("negative cycle: {}".format((float(base_quote['buy']) - float(base_mid['sell'])/float(quote_mid['buy']) )/float(base_quote['sell'])))
-        # base_mid_price_buy_1 / quote_mid_price_sell_1 - market_price_sell_1)/market_price_sell_1
-        # market_price_buy_1 - base_mid_price_sell_1 / quote_mid_price_buy_1)/market_price_buy_1
-        time.sleep(0.5)
-        pass
-    pdb.set_trace()
+    # while True:
+    #     # insur_eth
+    #     # insur_usdt
+    #     # eth_usdt
+    #     base_quote = okex.market_detail(base_cur, quote_cur)
+    #     base_mid = okex.market_detail(base_cur, mid_cur)
+    #     quote_mid = okex.market_detail(quote_cur, mid_cur)
+    #     print("*"*50)
+    #     print("base_quote => {} | sell: {} | buy: {}".format(base_cur+'/'+quote_cur, base_quote['sell'], base_quote['buy']))
+    #     print("base_mid => {} | sell: {} | buy: {}".format(base_cur+'/'+mid_cur, base_mid['sell'], base_mid['buy']))
+    #     print("quote_mid => {} | sell: {} | buy: {}".format(quote_cur+'/'+mid_cur, quote_mid['sell'], quote_mid['buy']))
+    #     # 计算正循环套利
+    #     print("="*50)
+    #     print("positive cycle: {}".format(( float(base_mid['buy']) /float(quote_mid['sell']) - float(base_quote['sell']))/float(base_quote['sell'])))
+    #     print("negative cycle: {}".format((float(base_quote['buy']) - float(base_mid['sell'])/float(quote_mid['buy']) )/float(base_quote['sell'])))
+    #     # base_mid_price_buy_1 / quote_mid_price_sell_1 - market_price_sell_1)/market_price_sell_1
+    #     # market_price_buy_1 - base_mid_price_sell_1 / quote_mid_price_buy_1)/market_price_buy_1
+    #     time.sleep(0.5)
+    #     pass
+    # pdb.set_trace()
 
 # print(exchangeConnection.pro.proService.ProServiceAPIKey().get_depth("ethcny").get("tick"))
 # print("以太币账户：",exchangeConnection.bitex.bitexService.BitexServiceAPIKey(key_index="CNY_1").get_spot_acct_info())

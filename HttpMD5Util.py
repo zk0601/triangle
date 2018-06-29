@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 #用于进行http请求，以及MD5加密，生成签名的工具类
 
-import http.client
-import urllib
+# import http.client
+# import urllib
 import json
 import hashlib
-import time
+import requests
 
 def buildMySign(params,secretKey):
     sign = ''
@@ -15,23 +15,28 @@ def buildMySign(params,secretKey):
     return  hashlib.md5(data.encode("utf8")).hexdigest().upper()
 
 def httpGet(url,resource,params=''):
-    conn = http.client.HTTPSConnection(url, timeout=10)
-    conn.request("GET",resource + '?' + params)
-    response = conn.getresponse()
-    data = response.read().decode('utf-8')
-    return json.loads(data)
+    # conn = http.client.HTTPSConnection(url, timeout=10)
+    # conn.request("GET",resource + '?' + params)
+    # response = conn.getresponse()
+    # data = response.read().decode('utf-8')
+    # return json.loads(data)
+    request_url = url + resource + '?' + params
+    conn = requests.get(request_url)
+    return json.loads(conn.content)
 
 def httpPost(url,resource,params):
+     # conn = http.client.HTTPSConnection(url, timeout=10)
+     # temp_params = urllib.parse.urlencode(params)
+     # conn.request("POST", resource, temp_params, headers)
+     # response = conn.getresponse()
+     # data = response.read().decode('utf-8')
+     # params.clear()
+     # conn.close()
+     # return data
      headers = {
-            "Content-type" : "application/x-www-form-urlencoded",
+         "Content-type": "application/x-www-form-urlencoded",
      }
-     conn = http.client.HTTPSConnection(url, timeout=10)
-     temp_params = urllib.parse.urlencode(params)
-     conn.request("POST", resource, temp_params, headers)
-     response = conn.getresponse()
-     data = response.read().decode('utf-8')
-     params.clear()
-     conn.close()
-     return data
-
+     request_url = url + resource
+     conn = requests.post(request_url, data=params, headers=headers)
+     return conn.text
 
