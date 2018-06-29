@@ -3,11 +3,9 @@
 
 import marketHelper
 import pdb
-# 设定账户 accountConfig
 import traceback
 import time
 import logging
-# import yaml
 import multiprocessing
 import math
 import random
@@ -71,7 +69,7 @@ class Triangle:
         self.base_mid_mid_reserve = 0.0
 
         # 最小的交易单位设定
-        self.min_trade_unit = 10   # INSUR/ETH交易对，设置为10
+        self.min_trade_unit = 1   # INSUR/ETH交易对，设置为10
 
         #3种货币之间的转换行情ticker
         self.market_price_tick = dict()  # 记录触发套利的条件时的当前行情
@@ -81,11 +79,14 @@ class Triangle:
         try:
             # M: okex market
             okex_market = marketHelper.Market()
-            # self.market_price_tick = dict()
             # base_cur="usdt", quote_cur="eth", mid_cur="insur"
-            # usdt_eth
             print('*'*40)
             print("{0}_{1}".format(self.base_cur, self.quote_cur))
+            market_buy_size = self.get_market_buy_size(okex_market)
+            market_buy_size = downRound(market_buy_size, 2)
+            market_sell_size = self.get_market_sell_size(okex_market)
+            market_sell_size = downRound(market_sell_size, 2)
+
             #盘口信息，调用ticker接口，获取sell值和buy值，即实时更新市场行情
             self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)] = \
                 okex_market.market_detail(self.base_cur, self.quote_cur)
@@ -140,8 +141,8 @@ class Triangle:
                 console_info = "正循环满足条件"
                 logger.info(console_info)
                 print(console_info)
-                market_buy_size = self.get_market_buy_size(okex_market)
-                market_buy_size = downRound(market_buy_size, 2)
+                # market_buy_size = self.get_market_buy_size(okex_market)
+                # market_buy_size = downRound(market_buy_size, 2)
                 if market_buy_size >= self.min_trade_unit:
                     # start buy
                     # pdb.set_trace()
@@ -150,14 +151,13 @@ class Triangle:
                     logger.info("小于最小交易单位")
 
             # 检查逆循环套利
-
             elif (market_price_buy_1 - base_mid_price_sell_1 / quote_mid_price_buy_1)/market_price_buy_1 > \
                     self.sum_slippage_fee():
                 console_info = "逆循环满足条件"
                 logger.info(console_info)
                 print(console_info)
-                market_sell_size = self.get_market_sell_size(okex_market)
-                market_sell_size = downRound(market_sell_size, 2)
+                # market_sell_size = self.get_market_sell_size(okex_market)
+                # market_sell_size = downRound(market_sell_size, 2)
                 if market_sell_size >= self.min_trade_unit:
                     # pdb.set_trace()
                     self.neg_cycle(okex_market, market_sell_size)
@@ -176,7 +176,6 @@ class Triangle:
         return self.base_quote_slippage + self.base_mid_slippage + self.quote_mid_slippage + \
                self.base_quote_fee + self.base_mid_fee + self.quote_mid_fee
 
-    #？？？？意义何在
     @staticmethod
     def get_market_name(base, quote):
         if base == "insur":
@@ -332,9 +331,12 @@ class Triangle:
             p1.start()
 
             # TODO: 这里最好直接从order_result里面获取成交的quote_cur金额，然后对冲该金额
+            # quote_to_be_hedged = downRound((field_amount-already_hedged_amount)
+            #                      * self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].
+            #                      get("asks")[0][0], 2)
             quote_to_be_hedged = downRound((field_amount-already_hedged_amount)
                                  * self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].
-                                 get("asks")[0][0], 2)
+                                 get("buy"), 2)
             p2 = multiprocessing.Process(target=self.hedged_buy_cur_pair,
                                          args=(quote_to_be_hedged, okex_market,
                                                self.get_market_name(self.quote_cur, self.mid_cur)))
@@ -359,9 +361,12 @@ class Triangle:
     def neg_cycle(self, okex_market, market_sell_size):
         logger.info("开始逆循环套利")
         # return
+        # order_result = okex_market.sell(cur_market_name=self.get_market_name(self.base_cur, self.quote_cur),
+        #                                  price=self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].
+        #                                  get("bids")[0][0], amount=market_sell_size)
         order_result = okex_market.sell(cur_market_name=self.get_market_name(self.base_cur, self.quote_cur),
-                                         price=self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].
-                                         get("bids")[0][0], amount=market_sell_size)
+                                        price=self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].
+                                        get("sell"), amount=market_sell_size)
         if not okex_market.order_normal(order_result,
                                          cur_market_name=self.get_market_name(self.base_cur, self.quote_cur)):
             # 交易失败
@@ -394,9 +399,12 @@ class Triangle:
             p1.start()
 
             # TODO: 这里最好直接从order_result里面获取成交的quote_cur金额，然后对冲该金额
+            # quote_to_be_hedged = downRound((field_amount - already_hedged_amount) *
+            #                      self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].
+            #                      get("bids")[0][0], 2)
             quote_to_be_hedged = downRound((field_amount - already_hedged_amount) *
                                  self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].
-                                 get("bids")[0][0], 2)
+                                 get("sell"), 2)
             p2 = multiprocessing.Process(target=self.hedged_sell_cur_pair,
                                          args=(quote_to_be_hedged, okex_market,
                                                self.get_market_name(self.quote_cur, self.mid_cur)))
@@ -420,15 +428,16 @@ class Triangle:
         """
         logger.info("开始买入{0}".format(cur_pair))
         try:
-            #?????"asks"哪里来的
+            # order_result = okex_market.buy(cur_market_name=cur_pair,
+            #                                 price=self.market_price_tick["{0}".format(cur_pair)].
+            #                                 get("asks")[0][0], amount=downRound(buy_size, 2))
             order_result = okex_market.buy(cur_market_name=cur_pair,
                                             price=self.market_price_tick["{0}".format(cur_pair)].
-                                            get("asks")[0][0], amount=downRound(buy_size, 2))
+                                            get("buy"), amount=downRound(buy_size, 2))
             hedged_amount = 0.0
             time.sleep(0.2)
             logger.info("买入结果：{0}".format(order_result))
-            #?????为啥buy返回true就交易失败
-            if not okex_market.order_normal(order_result,
+            if okex_market.order_normal(order_result,
                                          cur_market_name=cur_pair):
                 okex_market.cancel_order(order_result, cur_pair)  # 取消未成交的order
 
@@ -439,13 +448,13 @@ class Triangle:
                 # 交易失败
                 logger.info("买入{0} 交易失败 {1}".format(cur_pair, order_result))
             # needed?
-            if buy_size > hedged_amount:
-                # 对未成交的进行市价交易
-                buy_amount = self.market_price_tick["{0}".format(cur_pair)].get("high") \
-                             * (buy_size - hedged_amount)  # 市价最高价最差情况预估
-                buy_amount = max(HUOBI_BTC_MIN_ORDER_CASH, buy_amount)
-                market_order_result = okex_market.buy_market(cur_market_name=cur_pair, amount=downRound(buy_amount, 2))
-                logger.info(market_order_result)
+            # if buy_size > hedged_amount:
+            #     # 对未成交的进行市价交易
+            #     buy_amount = self.market_price_tick["{0}".format(cur_pair)].get("high") \
+            #                  * (buy_size - hedged_amount)  # 市价最高价最差情况预估
+            #     buy_amount = max(HUOBI_BTC_MIN_ORDER_CASH, buy_amount)
+            #     market_order_result = okex_market.buy_market(cur_market_name=cur_pair, amount=downRound(buy_amount, 2))
+            #     logger.info(market_order_result)
         except:
             logger.error(traceback.format_exc())
         logger.info("结束买入{0}".format(cur_pair))
@@ -461,8 +470,11 @@ class Triangle:
         logger.info("开始卖出{0}".format(cur_pair))
         try:
 
+            # order_result = okex_market.sell(cur_market_name=cur_pair,
+            #                                  price=self.market_price_tick["{0}".format(cur_pair)].get("bids")[0][0],
+            #                                  amount=sell_size)
             order_result = okex_market.sell(cur_market_name=cur_pair,
-                                             price=self.market_price_tick["{0}".format(cur_pair)].get("bids")[0][0],
+                                             price=self.market_price_tick["{0}".format(cur_pair)].get("sell"),
                                              amount=sell_size)
             hedged_amount = 0.0
             time.sleep(0.2)

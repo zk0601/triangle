@@ -11,7 +11,7 @@ import time
 import traceback
 import uuid
 
-import pandas as pd
+# import pandas as pd
 
 COIN_TYPE_BTC_CNY = "btc_cny"
 COIN_TYPE_LTC_CNY = "ltc_cny"
@@ -262,24 +262,24 @@ def diff_times_in_seconds(t1, t2):
     return( t2_secs - t1_secs)
 
 # 从数据库中获取调仓信息
-def get_trans_record(coinMarketType):
-    con = lite.connect('orderBook.db')
-    trans_sql = ("select *, datetime(record_time, 'unixepoch', 'localtime') as time_str "
-                 "from depth_data_%s order by record_time" % coinMarketType)
-    trans_record = pd.read_sql(trans_sql, con, index_col='time_str', parse_dates=['time_str'])
-    trans_record.to_csv(
-        "data/depth_data/depth_data_%s_%s.csv" % (coinMarketType, datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")))
-    return trans_record
-
-
-# 从数据库中获取pos record信息
-def get_pos_record():
-    con = lite.connect('orderBook.db')
-    pos_sql = ("select *, datetime(record_time, 'unixepoch', 'localtime') as time_str "
-               "from positionRecord order by record_time")
-    pos_record = pd.read_sql(pos_sql, con, index_col='time_str', parse_dates=['time_str'])
-    pos_record.to_csv("data/pos_data/pos_data_%s.csv" % (datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")))
-    return pos_record
+# def get_trans_record(coinMarketType):
+#     con = lite.connect('orderBook.db')
+#     trans_sql = ("select *, datetime(record_time, 'unixepoch', 'localtime') as time_str "
+#                  "from depth_data_%s order by record_time" % coinMarketType)
+#     trans_record = pd.read_sql(trans_sql, con, index_col='time_str', parse_dates=['time_str'])
+#     trans_record.to_csv(
+#         "data/depth_data/depth_data_%s_%s.csv" % (coinMarketType, datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")))
+#     return trans_record
+#
+#
+# # 从数据库中获取pos record信息
+# def get_pos_record():
+#     con = lite.connect('orderBook.db')
+#     pos_sql = ("select *, datetime(record_time, 'unixepoch', 'localtime') as time_str "
+#                "from positionRecord order by record_time")
+#     pos_record = pd.read_sql(pos_sql, con, index_col='time_str', parse_dates=['time_str'])
+#     pos_record.to_csv("data/pos_data/pos_data_%s.csv" % (datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")))
+#     return pos_record
 
 
 # 查看所给时间是否有bitvc的下周合约
