@@ -55,8 +55,8 @@ class Triangle:
         self.base_mid_fee = 0.002
         self.quote_mid_fee = 0.002
 
-        self.order_ratio_base_quote = 0.5  # 设定吃单比例
-        self.order_ratio_base_mid = 0.5
+        # self.order_ratio_base_quote = 0.5  # 设定吃单比例
+        # self.order_ratio_base_mid = 0.5
 
         # 设定监控时间
         self.interval = interval
@@ -73,6 +73,7 @@ class Triangle:
         # 最小的交易单位设定
         self.min_trade_unit = 10   # INSUR/ETH交易对，设置为10
 
+        #3种货币之间的转换行情ticker
         self.market_price_tick = dict()  # 记录触发套利的条件时的当前行情
 
     def strategy(self):   # 主策略
@@ -80,11 +81,12 @@ class Triangle:
         try:
             # M: okex market
             okex_market = marketHelper.Market()
-            self.market_price_tick = dict()
+            # self.market_price_tick = dict()
             # base_cur="usdt", quote_cur="eth", mid_cur="insur"
             # usdt_eth
             print('*'*40)
             print("{0}_{1}".format(self.base_cur, self.quote_cur))
+            #盘口信息，调用ticker接口，获取sell值和buy值，即实时更新市场行情
             self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)] = \
                 okex_market.market_detail(self.base_cur, self.quote_cur)
 
@@ -174,6 +176,7 @@ class Triangle:
         return self.base_quote_slippage + self.base_mid_slippage + self.quote_mid_slippage + \
                self.base_quote_fee + self.base_mid_fee + self.quote_mid_fee
 
+    #？？？？意义何在
     @staticmethod
     def get_market_name(base, quote):
         if base == "insur":
@@ -219,7 +222,6 @@ class Triangle:
         Parameter Info
         market_buy_size: the amount of buy base cur in market 3 (in this script, usdt)
         base_mid_sell_size: 在市场2 卖出的 insur 数量
-
         '''
         # market_buy_size = self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("asks")[0][1] \
         #                   * self.order_ratio_base_quote
@@ -418,12 +420,14 @@ class Triangle:
         """
         logger.info("开始买入{0}".format(cur_pair))
         try:
+            #?????"asks"哪里来的
             order_result = okex_market.buy(cur_market_name=cur_pair,
                                             price=self.market_price_tick["{0}".format(cur_pair)].
                                             get("asks")[0][0], amount=downRound(buy_size, 2))
             hedged_amount = 0.0
             time.sleep(0.2)
             logger.info("买入结果：{0}".format(order_result))
+            #?????为啥buy返回true就交易失败
             if not okex_market.order_normal(order_result,
                                          cur_market_name=cur_pair):
                 okex_market.cancel_order(order_result, cur_pair)  # 取消未成交的order
