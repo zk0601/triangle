@@ -1,16 +1,6 @@
 # -*- coding: utf-8 -*-
 #用于访问OKCOIN 现货REST API
 from HttpMD5Util import buildMySign,httpGet,httpPost
-import os
-import yaml
-File_path = os.path.abspath(__file__)
-user_info_yaml_path = os.path.join(File_path, '..', 'user_info.yaml')
-
-with open(user_info_yaml_path) as f:
-    user_info = yaml.load(f)
-okcoinRESTURL = user_info['user_1']['url'][0]
-apikey = user_info['user_1']['apikey'][0]
-secretkey = user_info['user_1']['secretkey'][0]
 
 
 class OKCoinSpot:
@@ -127,7 +117,3 @@ class OKCoinSpot:
            params['sign'] = buildMySign(params,self.__secretkey)
            return httpPost(self.__url,ORDER_HISTORY_RESOURCE,params)
 
-if __name__ == '__main__':
-    a = OKCoinSpot(okcoinRESTURL, apikey, secretkey)
-    print(a.trade('insur_usdt', 'buy_market', '20'))
-    print(a.trade('insur_usdt', '_market', '20'))

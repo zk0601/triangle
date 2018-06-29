@@ -13,8 +13,8 @@ from OkcoinSpotAPI import OKCoinSpot
 from OkcoinFutureAPI import OKCoinFuture
 # from config import *
 import yaml
-File_path = os.path.abspath(__file__)
-user_info_yaml_path = os.path.join(File_path, '..', 'user_info.yaml')
+File_path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+user_info_yaml_path = os.path.join(File_path,  'user_info.yaml')
 
 with open(user_info_yaml_path) as f:
     user_info = yaml.load(f)
