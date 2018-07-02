@@ -48,7 +48,7 @@ class Market:
             if (base_cur in self.curs) and (quote_cur in self.curs) and (base_cur != quote_cur):
                 try:
                     tk = okcoinSpot.ticker(base_cur+'_'+quote_cur)
-                    # print(tk)
+                    print(tk)
                     if type(tk) ==str:
                         tk = json.loads(tk)
                     if 'ticker' in tk.keys():

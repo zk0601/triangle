@@ -98,6 +98,7 @@ class Triangle:
             #盘口信息，调用ticker接口，获取sell值和buy值，即实时更新市场行情
             print("开始获取市场行情")
             logger.info("开始获取市场行情")
+            print("{0}_{1}".format(self.base_cur, self.quote_cur))
             self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)] = \
                 okex_market.market_detail(self.base_cur, self.quote_cur)
             market_price_sell_1 = \

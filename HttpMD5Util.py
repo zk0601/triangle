@@ -21,7 +21,11 @@ def httpGet(url,resource,params=''):
     # data = response.read().decode('utf-8')
     # return json.loads(data)
     request_url = url + resource + '?' + params
-    conn = requests.get(request_url)
+    try:
+        conn = requests.get(request_url, timeout=10)
+    except Exception as e:
+        print(e)
+        return None
     return json.loads(conn.content)
 
 def httpPost(url,resource,params):
@@ -37,6 +41,10 @@ def httpPost(url,resource,params):
          "Content-type": "application/x-www-form-urlencoded",
      }
      request_url = url + resource
-     conn = requests.post(request_url, data=params, headers=headers)
+     try:
+        conn = requests.post(request_url, data=params, headers=headers, timeout=10)
+     except Exception as e:
+         print(e)
+         return None
      return conn.text
 
