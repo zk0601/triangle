@@ -14,7 +14,7 @@ from utils.helper import *
 # 设置logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-main_log_handler = logging.FileHandler("log/triangle_main_{0}.log".format(int(time.time())), mode="w", encoding="utf-8")
+main_log_handler = logging.FileHandler("log/triangle_main_{0}.log".format(time.strftime("%Y%m%d%H%M")), mode="w", encoding="utf-8")
 main_log_handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
 main_log_handler.setFormatter(formatter)
@@ -45,14 +45,21 @@ class Triangle:
         self.quote_cur = quote_cur
         self.mid_cur = mid_cur   # 中间货币，cny或者btc
 
-        self.base_quote_slippage = 0.002  # 设定市场价滑点百分比
-        self.base_mid_slippage = 0.002
-        self.quote_mid_slippage = 0.002
+        # self.base_quote_slippage = 0.002  # 设定市场价滑点百分比
+        # self.base_mid_slippage = 0.002
+        # self.quote_mid_slippage = 0.002
+        #
+        # self.base_quote_fee = 0.002  # 设定手续费比例
+        # self.base_mid_fee = 0.002
+        # self.quote_mid_fee = 0.002
+        # test
+        self.base_quote_slippage = 0  # 设定市场价滑点百分比
+        self.base_mid_slippage = 0
+        self.quote_mid_slippage = 0
 
-        self.base_quote_fee = 0.002  # 设定手续费比例
-        self.base_mid_fee = 0.002
-        self.quote_mid_fee = 0.002
-
+        self.base_quote_fee = 0  # 设定手续费比例
+        self.base_mid_fee = 0
+        self.quote_mid_fee = 0
         # self.order_ratio_base_quote = 0.5  # 设定吃单比例
         # self.order_ratio_base_mid = 0.5
 
@@ -83,10 +90,10 @@ class Triangle:
             # base_cur="usdt", quote_cur="eth", mid_cur="insur"
             print('*'*40)
             print("{0}_{1}".format(self.base_cur, self.quote_cur))
-            market_buy_size = self.get_market_buy_size(okex_market)
-            market_buy_size = downRound(market_buy_size, 2)
-            market_sell_size = self.get_market_sell_size(okex_market)
-            market_sell_size = downRound(market_sell_size, 2)
+            # market_buy_size = self.get_market_buy_size(okex_market)
+            # market_buy_size = downRound(market_buy_size, 2)
+            # market_sell_size = self.get_market_sell_size(okex_market)
+            # market_sell_size = downRound(market_sell_size, 2)
 
             #盘口信息，调用ticker接口，获取sell值和buy值，即实时更新市场行情
             print("开始获取市场行情")
@@ -152,14 +159,13 @@ class Triangle:
                 console_info = "正循环满足条件"
                 logger.info(console_info)
                 print(console_info)
-                # market_buy_size = self.get_market_buy_size(okex_market)
-                # market_buy_size = downRound(market_buy_size, 2)
-                if market_buy_size >= self.min_trade_unit:
-                    # start buy
-                    # pdb.set_trace()
-                    self.pos_cycle(okex_market, market_buy_size)
-                else:
-                    logger.info("小于最小交易单位")
+
+                # if market_buy_size >= self.min_trade_unit:
+                #     # start buy
+                #     # pdb.set_trace()
+                #     self.pos_cycle(okex_market, market_buy_size)
+                # else:
+                #     logger.info("小于最小交易单位")
 
             # 检查逆循环套利
             elif (market_price_buy_1 - base_mid_price_sell_1 / quote_mid_price_buy_1)/market_price_buy_1 > \
@@ -167,13 +173,12 @@ class Triangle:
                 console_info = "逆循环满足条件"
                 logger.info(console_info)
                 print(console_info)
-                # market_sell_size = self.get_market_sell_size(okex_market)
-                # market_sell_size = downRound(market_sell_size, 2)
-                if market_sell_size >= self.min_trade_unit:
-                    # pdb.set_trace()
-                    self.neg_cycle(okex_market, market_sell_size)
-                else:
-                    logger.info("小于最小交易单位")
+
+                # if market_sell_size >= self.min_trade_unit:
+                #     # pdb.set_trace()
+                #     self.neg_cycle(okex_market, market_sell_size)
+                # else:
+                #     logger.info("小于最小交易单位")
             else:
                 console_info = "正/逆循环均不满足条件, 等待"
                 logger.info(console_info)
@@ -280,11 +285,13 @@ class Triangle:
     def get_market_sell_size(self, okex_market):
         market_sell_size = 20 # 应当为 (总数额的 usdt - 预留 usdt) * 风险系数
         base_mid_buy_size = 20 # insur amount
+        print('获取账号余额开始')
         base_quote_off_reserve_sell_size = okex_market.account_available(self.base_cur) - self.base_quote_base_reserve
         quote_mid_off_reserve_sell_size = okex_market.account_available(self.quote_cur) - self.quote_mid_quote_reserve #/ \
             # self.market_price_tick["{0}_{1}".format(self.base_cur, self.quote_cur)].get("bids")[0][0]
         base_mid_off_reserve_buy_size = okex_market.account_available(self.mid_cur) - self.base_mid_mid_reserve #/ \
             # self.market_price_tick["{0}_{/1}".format(self.base_cur, self.mid_cur)].get("asks")[0][0]
+        print('获取账号余额结束')
         logger.info("计算数量：{0}，{1}，{2}，{3}，{4}".format(market_sell_size, base_mid_buy_size,
                     base_quote_off_reserve_sell_size, quote_mid_off_reserve_sell_size, base_mid_off_reserve_buy_size))
         return math.floor(min(market_sell_size, base_mid_buy_size, base_quote_off_reserve_sell_size,
